@@ -65,7 +65,7 @@
         }
 
         .animate-memory {
-            animation: memoryPulse 2.0s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation: memoryPulse 3.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
         /* Animación de entrada de la tarjeta final */
@@ -168,9 +168,23 @@
     <div class="fixed inset-0 pointer-events-none z-0 bg-[radial-gradient(circle_at_center,transparent_15%,#050505_95%)]"></div>
 
     <!-- ==========================================
-         FASE 1: SECUENCIA DE RECUERDOS (2.0s c/u)
+         FASE 0: PANTALLA INICIAL (TOCAR PARA INICIAR)
          ========================================== -->
-    <section id="intro-container" class="fixed inset-0 z-20 flex flex-col items-center justify-center px-6 text-center transition-opacity duration-700">
+    <section id="ready-screen"
+             onclick="startExperience()"
+             class="fixed inset-0 z-30 flex flex-col items-center justify-center px-6 text-center cursor-pointer select-none transition-opacity duration-500">
+        <p class="font-serif-elegant text-4xl sm:text-6xl font-semibold text-white tracking-wide drop-shadow-[0_0_25px_rgba(255,255,255,0.28)]">
+            ¿Estás listo?
+        </p>
+        <p class="mt-5 text-[11px] uppercase tracking-[0.3em] text-neutral-400 animate-pulse">
+            Toca cualquier parte de la pantalla
+        </p>
+    </section>
+
+    <!-- ==========================================
+         FASE 1: SECUENCIA DE RECUERDOS (3.5s c/u)
+         ========================================== -->
+    <section id="intro-container" class="hidden fixed inset-0 z-20 flex flex-col items-center justify-center px-6 text-center transition-opacity duration-700">
         <!-- Indicador de progreso minimalista arriba -->
         <div class="absolute top-8 left-0 right-0 flex justify-center gap-1.5 px-8" id="progress-dots">
             <!-- Se llena dinámicamente con JS -->
@@ -360,12 +374,12 @@
     </main>
 
     <!-- Audio de fondo -->
-    <audio id="bg-music" src="cancion.m4a" loop preload="auto" autoplay playsinline></audio>
+    <audio id="bg-music" src="cancion.m4a" loop preload="auto" playsinline></audio>
 
     <!-- Botón disimulado abajo para silenciar / activar música -->
     <button id="mute-btn"
             type="button"
-            onclick="toggleMute()"
+            onclick="event.stopPropagation(); toggleMute()"
             aria-label="Silenciar música"
             title="Silenciar música"
             class="fixed bottom-4 right-4 z-40 w-9 h-9 rounded-full bg-white/[0.04] hover:bg-white/[0.12] border border-white/10 text-neutral-500 hover:text-white backdrop-blur-sm flex items-center justify-center transition-all active:scale-95">
@@ -1185,9 +1199,10 @@
         }
 
         /**
-         * Música de fondo: inicia al cargar (con respaldo al primer toque si el navegador bloquea autoplay)
+         * Pantalla inicial y música de fondo al primer toque
          */
         let isMusicMuted = false;
+        let hasExperienceStarted = false;
 
         function updateMuteButton() {
             const icon = document.getElementById('mute-icon');
@@ -1205,29 +1220,28 @@
             }
         }
 
-        function initBackgroundMusic() {
+        function startExperience() {
+            if (hasExperienceStarted) return;
+            hasExperienceStarted = true;
+
             const audio = document.getElementById('bg-music');
-            if (!audio) return;
+            if (audio && !isMusicMuted) {
+                audio.play().catch(() => {});
+            }
 
-            const tryPlay = () => {
-                if (isMusicMuted) return;
-                const playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(() => {
-                        // Si el navegador bloquea el autoplay sin interacción, reintentar en el primer gesto del usuario
-                        const unlockEvents = ['pointerdown', 'touchstart', 'click', 'keydown'];
-                        const unlock = () => {
-                            if (!isMusicMuted && audio.paused) {
-                                audio.play().catch(() => {});
-                            }
-                            unlockEvents.forEach(evt => document.removeEventListener(evt, unlock, true));
-                        };
-                        unlockEvents.forEach(evt => document.addEventListener(evt, unlock, { capture: true, passive: true }));
-                    });
-                }
-            };
-
-            tryPlay();
+            const readyScreen = document.getElementById('ready-screen');
+            if (readyScreen) {
+                readyScreen.style.opacity = '0';
+                setTimeout(() => {
+                    readyScreen.classList.add('hidden');
+                    introContainer.classList.remove('hidden');
+                    introContainer.style.opacity = '1';
+                    playNextPhrase();
+                }, 450);
+            } else {
+                introContainer.classList.remove('hidden');
+                playNextPhrase();
+            }
         }
 
         function toggleMute() {
@@ -1237,19 +1251,17 @@
             isMusicMuted = !isMusicMuted;
             audio.muted = isMusicMuted;
 
-            if (!isMusicMuted && audio.paused) {
+            if (!isMusicMuted && hasExperienceStarted && audio.paused) {
                 audio.play().catch(() => {});
             }
 
             updateMuteButton();
         }
 
-        // Iniciar todo al cargar la ventana
+        // Iniciar partículas y puntos al cargar; esperar toque en pantalla para música e intro
         window.onload = function() {
             initParticles();
             initProgressDots();
-            initBackgroundMusic();
-            setTimeout(playNextPhrase, 300);
         };
     </script>
 </body>
