@@ -136,6 +136,20 @@
         .nebula-cloud-3 {
             animation: nebulaFloat3 18s ease-in-out infinite;
         }
+
+        /* Animación del logo de Ocor */
+        @keyframes ocorLogoSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.06); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        .ocor-logo-anim {
+            animation: ocorLogoSpin 8s linear infinite;
+            filter: drop-shadow(0 0 6px rgba(90, 219, 127, 0.45));
+        }
+        .ocor-btn:hover .ocor-logo-anim {
+            animation-duration: 2.5s;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center relative selection:bg-white selection:text-black">
@@ -322,6 +336,19 @@
                     <span>Guardar información</span>
                 </button>
             </div>
+
+            <!-- Botón 4: WhatsApp Ocor (Invitación web para tu evento) -->
+            <a href="https://wa.me/584243603237?text=Quiero%20mi%20pr%C3%B3xima%20invitaci%C3%B3n%20virtual%20%E2%9C%A8%F0%9F%8E%89%F0%9F%93%B2"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="ocor-btn w-full bg-[#002F2E] hover:bg-[#063c3a] text-[#5ADB7F] border border-[#5ADB7F]/40 hover:border-[#5ADB7F]/75 active:scale-[0.98] transition-all font-semibold text-xs sm:text-sm py-3.5 px-5 rounded-2xl flex items-center justify-center gap-3 text-center shadow-[0_0_20px_rgba(90,219,127,0.18)]">
+                <svg class="ocor-logo-anim w-7 h-7 shrink-0" viewBox="0 0 100 100" aria-hidden="true">
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="11" />
+                    <path d="M 50 13.5 A 36.5 36.5 0 0 1 85 60 C 70 48 58 46 50 50 C 56 36 56 24 50 13.5 Z" fill="currentColor" />
+                    <path d="M 50 86.5 A 36.5 36.5 0 0 1 15 40 C 30 52 42 54 50 50 C 44 64 44 76 50 86.5 Z" fill="currentColor" />
+                </svg>
+                <span>¿Quieres una invitación web para tu evento? <span class="underline decoration-2 underline-offset-2 font-bold">Haz click aquí</span></span>
+            </a>
 
             <!-- Botón extra para volver a ver la animación inicial -->
             <div class="pt-2 text-center">
