@@ -359,6 +359,19 @@
         </div>
     </main>
 
+    <!-- Audio de fondo -->
+    <audio id="bg-music" src="cancion.m4a" loop preload="auto" autoplay playsinline></audio>
+
+    <!-- Botón disimulado abajo para silenciar / activar música -->
+    <button id="mute-btn"
+            type="button"
+            onclick="toggleMute()"
+            aria-label="Silenciar música"
+            title="Silenciar música"
+            class="fixed bottom-4 right-4 z-40 w-9 h-9 rounded-full bg-white/[0.04] hover:bg-white/[0.12] border border-white/10 text-neutral-500 hover:text-white backdrop-blur-sm flex items-center justify-center transition-all active:scale-95">
+        <i id="mute-icon" class="fa-solid fa-volume-high text-xs"></i>
+    </button>
+
     <!-- Notificación Toast Flotante -->
     <div id="toast-notification" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 translate-y-4 transition-all duration-300 bg-white text-black px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 text-xs font-medium whitespace-nowrap">
         <i id="toast-icon" class="fa-solid fa-circle-check text-black text-base"></i>
@@ -407,7 +420,7 @@
             "Te espero..."
         ];
 
-        const PHRASE_DURATION = 2000; // 2 segundos por frase
+        const PHRASE_DURATION = 3500; // 2 segundos por frase
         let currentIndex = 0;
         let introTimer = null;
         let isIntroFinished = false;
@@ -1171,10 +1184,71 @@
             animateParticles();
         }
 
+        /**
+         * Música de fondo: inicia al cargar (con respaldo al primer toque si el navegador bloquea autoplay)
+         */
+        let isMusicMuted = false;
+
+        function updateMuteButton() {
+            const icon = document.getElementById('mute-icon');
+            const btn = document.getElementById('mute-btn');
+            if (!icon || !btn) return;
+
+            if (isMusicMuted) {
+                icon.className = 'fa-solid fa-volume-xmark text-xs';
+                btn.setAttribute('aria-label', 'Activar música');
+                btn.setAttribute('title', 'Activar música');
+            } else {
+                icon.className = 'fa-solid fa-volume-high text-xs';
+                btn.setAttribute('aria-label', 'Silenciar música');
+                btn.setAttribute('title', 'Silenciar música');
+            }
+        }
+
+        function initBackgroundMusic() {
+            const audio = document.getElementById('bg-music');
+            if (!audio) return;
+
+            const tryPlay = () => {
+                if (isMusicMuted) return;
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {
+                        // Si el navegador bloquea el autoplay sin interacción, reintentar en el primer gesto del usuario
+                        const unlockEvents = ['pointerdown', 'touchstart', 'click', 'keydown'];
+                        const unlock = () => {
+                            if (!isMusicMuted && audio.paused) {
+                                audio.play().catch(() => {});
+                            }
+                            unlockEvents.forEach(evt => document.removeEventListener(evt, unlock, true));
+                        };
+                        unlockEvents.forEach(evt => document.addEventListener(evt, unlock, { capture: true, passive: true }));
+                    });
+                }
+            };
+
+            tryPlay();
+        }
+
+        function toggleMute() {
+            const audio = document.getElementById('bg-music');
+            if (!audio) return;
+
+            isMusicMuted = !isMusicMuted;
+            audio.muted = isMusicMuted;
+
+            if (!isMusicMuted && audio.paused) {
+                audio.play().catch(() => {});
+            }
+
+            updateMuteButton();
+        }
+
         // Iniciar todo al cargar la ventana
         window.onload = function() {
             initParticles();
             initProgressDots();
+            initBackgroundMusic();
             setTimeout(playNextPhrase, 300);
         };
     </script>
